@@ -55,6 +55,7 @@ public class Build implements Model {
   }
 
   public Build() {
+    // Bean constructor
   }
 
   public int getNumber() {

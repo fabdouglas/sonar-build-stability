@@ -67,7 +67,7 @@ public class BuildStabilityMetrics implements Metrics {
    */
   public static final Metric<Integer> AVG_DURATION = new Metric.Builder("build_average_duration", "Average Duration",
     Metric.ValueType.MILLISEC)
-    .setDescription("Average Duration")
+    .setDescription("Average of success builds")
     .setDirection(Metric.DIRECTION_WORST)
     .setQualitative(false)
     .setDomain(DOMAIN_BUILD)
@@ -99,7 +99,7 @@ public class BuildStabilityMetrics implements Metrics {
    * Average time to fix a failure.
    */
   public static final Metric<Integer> AVG_TIME_TO_FIX = new Metric.Builder("build_average_time_to_fix_failure",
-    "Average time to fix a failure",
+    "Time to fix a failure",
     Metric.ValueType.MILLISEC)
     .setDescription("Average time to fix a failure")
     .setDirection(Metric.DIRECTION_WORST)
