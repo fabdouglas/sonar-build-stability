@@ -56,8 +56,7 @@ public class BuildStabilitySensor implements Sensor {
   public static final int DAYS_DEFAULT_VALUE = 30;
   public static final String USERNAME_PROPERTY = "sonar.build-stability.username.secured";
 
-  @SuppressWarnings("squid:S2068")
-  public static final String PASSWORD_PROPERTY = "sonar.build-stability.password.secured";
+  public static final String PASSWORD_PROPERTY = "sonar.build-stability.password.secured"; // NOSONAR
   public static final String USE_JSECURITYCHECK_PROPERTY = "sonar.build-stability.use_jsecuritycheck";
   public static final boolean USE_JSECURITYCHECK_DEFAULT_VALUE = false;
   public static final String CI_URL_PROPERTY = "sonar.build-stability.url";
@@ -83,13 +82,13 @@ public class BuildStabilitySensor implements Sensor {
 
   @Override
   public boolean shouldExecuteOnProject(Project project) {
-    return project.isRoot() && StringUtils.isNotEmpty(getCiUrl(project));
+    return project.isRoot() && StringUtils.isNotEmpty(getCiUrl());
   }
 
   /**
    * Return the URL access to CI server. Either from settings either from the Maven configuration.
    */
-  protected String getCiUrl(Project project) {
+  protected String getCiUrl() {
     String url = settings.getString(CI_URL_PROPERTY);
     if (StringUtils.isNotEmpty(url)) {
       return url;
@@ -105,7 +104,7 @@ public class BuildStabilitySensor implements Sensor {
     List<Build> builds;
     Date date;
     try {
-      final String ciUrl = getCiUrl(project);
+      final String ciUrl = getCiUrl();
       final CiConnector connector = getConnector(ciUrl);
       if (connector == null) {
         LOG.warn("Unknown CiManagement system or incorrect URL: {}", ciUrl);

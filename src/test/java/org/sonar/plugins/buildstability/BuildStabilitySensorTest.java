@@ -93,7 +93,7 @@ public class BuildStabilitySensorTest {
     when(mavenCiConfig.getUrl()).thenReturn("pom");
     settings.setProperty(BuildStabilitySensor.CI_URL_PROPERTY, "Hudson:conf");
 
-    assertThat(sensor.getCiUrl(mock(Project.class)), is("Hudson:conf"));
+    assertThat(sensor.getCiUrl(), is("Hudson:conf"));
 
   }
 

@@ -30,6 +30,7 @@ import org.sonar.plugins.buildstability.ci.api.Unmarshaller;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Evgeny Mandrikov
@@ -61,7 +62,7 @@ public class BambooBuildUnmarshaller implements Unmarshaller<Build> {
     String state = result.attributeValue("state");
     build.setNumber(Integer.parseInt(result.attributeValue("number")));
 
-    SimpleDateFormat sdf = new SimpleDateFormat(DATE_TIME_FORMAT);
+    SimpleDateFormat sdf = new SimpleDateFormat(DATE_TIME_FORMAT, Locale.ENGLISH);
     String buildStartedTime = result.elementText("buildStartedTime");
     // Remove ':' in the timezone because it is not was the Java format expect
     int timezoneColonSeparatorIndex = buildStartedTime.lastIndexOf(':');

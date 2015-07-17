@@ -37,9 +37,6 @@ public abstract class AbstractServer {
   private String password;
   private String key;
 
-  public AbstractServer() {
-  }
-
   public String getHost() {
     return host;
   }

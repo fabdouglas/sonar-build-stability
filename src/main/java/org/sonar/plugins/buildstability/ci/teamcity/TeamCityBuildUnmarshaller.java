@@ -29,6 +29,7 @@ import org.sonar.plugins.buildstability.ci.api.Unmarshaller;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Alexei Guevara <alguevara@kijiji.ca>
@@ -51,7 +52,7 @@ public class TeamCityBuildUnmarshaller implements Unmarshaller<Build> {
     build.setNumber(Integer.parseInt(domElement.attributeValue("number")));
     build.setTimestamp(getTimeStamp(domElement.elementText("startDate")));
     build.setDuration(calculateDuration(domElement.elementText("startDate"), domElement.elementText("finishDate")));
-    build.setStatus("SUCCESS".equalsIgnoreCase(result)?Status.success:Status.failed);
+    build.setStatus("SUCCESS".equalsIgnoreCase(result) ? Status.success : Status.failed);
 
     return build;
   }
@@ -73,7 +74,7 @@ public class TeamCityBuildUnmarshaller implements Unmarshaller<Build> {
   }
 
   private Date parseDate(String date) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_TIME_FORMAT);
+    final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_TIME_FORMAT, Locale.ENGLISH);
     try {
       return dateFormat.parse(date);
     } catch (ParseException e) {
