@@ -50,26 +50,31 @@
 		<url>https://github.com/SonarCommunity/sonar-build-stability</url>
 		<tag>HEAD</tag>
 	</scm>
+	
 	<issueManagement>
 		<system>JIRA</system>
 		<url>http://jira.codehaus.org/browse/SONARPLUGINS/component/14312</url>
 	</issueManagement>
+
 	<ciManagement>
 		<system>Jenkins</system>
-		<url>https://sonarplugins.ci.cloudbees.com/job/build-stability/</url>
+		<url>${JENKINS_URL}/job/${JOB_NAME}/</url>
 	</ciManagement>
 
 	<properties>
 		<sonar.pluginName>Build Stability</sonar.pluginName>
 		<sonar.pluginClass>org.sonar.plugins.buildstability.BuildStabilityPlugin</sonar.pluginClass>
 		<sonar.version>4.5.4</sonar.version>
-		<jacoco.version>0.7.5.201505241946</jacoco.version>
-		<jacoco.path>${settings.localRepository}/org/jacoco/org.jacoco.agent/${jacoco.version}/org.jacoco.agent-${jacoco.version}-runtime.jar</jacoco.path>
-		<jacoco.utReport>${project.build.directory}/jacoco.exec</jacoco.utReport>
-		<jacoco.itReport>${project.build.directory}/jacoco-it.exec</jacoco.itReport>
-		<jacoco.utAgentConfig>-javaagent:${jacoco.path}=destfile=${jacoco.utReport}</jacoco.utAgentConfig>
-		<jacoco.itAgentConfig>-javaagent:${jacoco.path}=destfile=${jacoco.itReport}</jacoco.itAgentConfig>
-		<jacoco-listeners.version>2.4</jacoco-listeners.version>
+		<plugin.antrun>1.8</plugin.antrun>                    <!-- http://maven.apache.org/plugins/maven-antrun-plugin/project-summary.html -->
+		<plugin.surefire>2.18.1</plugin.surefire>
+		<plugin.jacoco>0.7.5.201505241946</plugin.jacoco>
+		<plugin.jacoco.ut.destFile>${workspace}/jacoco-ut.exec</plugin.jacoco.ut.destFile>
+		<sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
+		<sonar.java.coveragePlugin>${sonar.core.codeCoveragePlugin}</sonar.java.coveragePlugin>
+		<sonar.jacoco.reportPath>${plugin.jacoco.ut.destFile}</sonar.jacoco.reportPath>
+		<maven.ut.argLine.memory>-XX:MaxPermSize=256m -Xms800m -Xmx800m</maven.ut.argLine.memory>
+		<maven.ut.argLine>${maven.ut.argLine.memory}</maven.ut.argLine>
+		<jacoco-listeners.version>3.2</jacoco-listeners.version>
 	</properties>
 
 	<dependencies>
@@ -144,7 +149,7 @@
 		<dependency>
 			<groupId>org.jacoco</groupId>
 			<artifactId>org.jacoco.agent</artifactId>
-			<version>${jacoco.version}</version>
+			<version>${plugin.jacoco}</version>
 			<classifier>runtime</classifier>
 			<scope>test</scope>
 		</dependency>
@@ -152,16 +157,109 @@
 	<profiles>
 		<profile>
 			<id>coverage-per-test</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.codehaus.sonar-plugins.java</groupId>
-					<artifactId>sonar-jacoco-listeners</artifactId>
-					<version>3.2</version>
-					<scope>test</scope>
-				</dependency>
-			</dependencies>
 			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.jacoco</groupId>
+							<artifactId>jacoco-maven-plugin</artifactId>
+							<version>${plugin.jacoco}</version>
+							<executions>
+								<execution>
+									<id>agent-unit</id>
+									<phase>process-test-classes</phase>
+									<goals>
+										<goal>prepare-agent</goal>
+									</goals>
+									<configuration>
+										<output>file</output>
+										<append>true</append>
+										<propertyName>plugin.jacoco.ut.argLine</propertyName>
+										<destFile>${plugin.jacoco.ut.destFile}</destFile>
+									</configuration>
+								</execution>
+							</executions>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-surefire-plugin</artifactId>
+							<version>${plugin.surefire}</version>
+						</plugin>
+					</plugins>
+				</pluginManagement>
 				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>${plugin.antrun}</version>
+						<executions>
+							<execution>
+								<id>clean-jacoco-final</id>
+								<phase>clean</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target name="Clean Jacoco final data" unless="jacoco.started">
+										<taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" />
+										<echo message="Jacoco is now marked as started, file is : ${plugin.jacoco.ut.destFile}, sonar expects : ${sonar.jacoco.reportPath}" />
+										<delete file="${plugin.jacoco.ut.destFile}" quiet="true" />
+										<delete file="${plugin.jacoco.it.destFile}" quiet="true" />
+										<groovy>
+											System.setProperty("jacoco.started","yes")
+										</groovy>
+									</target>
+								</configuration>
+							</execution>
+							<execution>
+								<id>clean-jacoco-target</id>
+								<phase>clean</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target name="Clean Jacoco target data">
+										<delete file="${project.build.directory}/jacoco-it.exec" quiet="true" />
+										<delete file="${project.build.directory}/jacoco-ut.exec" quiet="true" />
+									</target>
+								</configuration>
+							</execution>
+							<execution>
+								<id>merge-jacoco-ut</id>
+								<phase>test</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target if="plugin.jacoco.ut.destFile" name="Merge Jacoco UT">
+										<move file="${plugin.jacoco.ut.destFile}" tofile="${project.build.directory}/jacoco-ut.exec" quiet="true" failonerror="false" />
+										<typedef resource="org/jacoco/ant/antlib.xml" />
+										<merge destfile="${plugin.jacoco.ut.destFile}">
+											<fileset dir="${project.build.directory}">
+												<include name="jacoco-ut*.exec" />
+											</fileset>
+										</merge>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>org.jacoco</groupId>
+								<artifactId>org.jacoco.ant</artifactId>
+								<version>${plugin.jacoco}</version>
+							</dependency>
+							<dependency>
+								<groupId>org.codehaus.groovy</groupId>
+								<artifactId>groovy-ant</artifactId>
+								<version>2.3.7</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
@@ -172,7 +270,6 @@
 							<!-- JDK 8 - bytecode verifier cannot be relaxed or disabled -->
 							<!-- to prevent runtime errors, OpenJPA tests are ignored -->
 							<argLine>${maven.ut.argLine} ${plugin.jacoco.ut.argLine}</argLine>
-							<argLine>${jacoco.utAgentConfig}</argLine>
 							<includes>
 								<include>**/*Test.java</include>
 								<include>**/*Tests.java</include>
