@@ -74,6 +74,7 @@
 		<sonar.jacoco.reportPath>${plugin.jacoco.ut.destFile}</sonar.jacoco.reportPath>
 		<maven.ut.argLine.memory>-XX:MaxPermSize=256m -Xms800m -Xmx800m</maven.ut.argLine.memory>
 		<maven.ut.argLine>${maven.ut.argLine.memory}</maven.ut.argLine>
+		<maven.ut.reuseForks>true</maven.ut.reuseForks>
 		<jacoco-listeners.version>3.4.0-FDA</jacoco-listeners.version>
 	</properties>
 
@@ -270,6 +271,7 @@
 							<!-- JDK 8 - bytecode verifier cannot be relaxed or disabled -->
 							<!-- to prevent runtime errors, OpenJPA tests are ignored -->
 							<argLine>${maven.ut.argLine} ${plugin.jacoco.ut.argLine}</argLine>
+							<reuseForks>${maven.ut.reuseForks}</reuseForks>
 							<includes>
 								<include>**/*Test.java</include>
 								<include>**/*Tests.java</include>
