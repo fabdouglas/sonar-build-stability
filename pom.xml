@@ -74,7 +74,7 @@
 		<sonar.jacoco.reportPath>${plugin.jacoco.ut.destFile}</sonar.jacoco.reportPath>
 		<maven.ut.argLine.memory>-XX:MaxPermSize=256m -Xms800m -Xmx800m</maven.ut.argLine.memory>
 		<maven.ut.argLine>${maven.ut.argLine.memory}</maven.ut.argLine>
-		<jacoco-listeners.version>3.2</jacoco-listeners.version>
+		<jacoco-listeners.version>3.4-FDA</jacoco-listeners.version>
 	</properties>
 
 	<dependencies>
